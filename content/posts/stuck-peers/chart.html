@@ -117,7 +117,7 @@
     if (parent) parent.appendChild(e);
     return e;
   }
-  var svg = root.querySelector("svg");
+  var svg = root.querySelector(".viz-plot svg");
   var grid = el("g", { "class": "grid" }, svg);
   var ticks = el("g", { "class": "tick" }, svg);
   for (var v = 0; v <= yMax; v += 150) {

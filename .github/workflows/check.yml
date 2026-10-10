@@ -23,7 +23,7 @@ jobs:
           EXPECTED: CaK7kGohya2cLhoXQTLgBsrjDVLZKszD6ktexjRSaXCf
         run: |
           pip install --quiet blake3==1.0.5 base58==2.1.1
-          derived=$(python3 -I -c 'import blake3, base58
+          derived=$(python3 -c 'import blake3, base58
           w = open("published-contract/website_contract.wasm", "rb").read()
           p = open("published-contract/website.parameters", "rb").read()
           print(base58.b58encode(blake3.blake3(blake3.blake3(w).digest() + p).digest()).decode())')

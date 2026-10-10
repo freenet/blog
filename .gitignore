@@ -1,0 +1,7 @@
+/public/
+/resources/_gen/
+.hugo_build.lock
+.env
+# Signing keys never belong in this repo. See README.
+*.toml.key
+*website-key*

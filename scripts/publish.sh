@@ -22,7 +22,8 @@ WASM="$ROOT/published-contract/website_contract.wasm"
 PARAMS="$ROOT/published-contract/website.parameters"
 ID_FILE="$ROOT/published-contract/contract-id.txt"
 # fdev and the read-back must talk to the same node: the default local node on
-# 7509. Clear the variables that would point fdev elsewhere.
+# 7509. Clear the variables that would point fdev elsewhere. A node on another
+# port is not supported; fdev will fail to connect.
 NODE_HTTP=http://127.0.0.1:7509
 unset MODE FREENET_NODE_URL WS_API_PORT
 
@@ -71,9 +72,12 @@ else
   HEAD_SHA="$(git -C "$ROOT" rev-parse HEAD)"
   [ "$HEAD_SHA" = "$(git -C "$ROOT" rev-parse origin/main)" ] || die "HEAD is not origin/main. Pull first."
   # CI must be green on this exact commit.
-  RUNS="$(gh api "repos/freenet/blog/commits/$HEAD_SHA/check-runs" --jq '[.check_runs[] | .conclusion] | join(" ")')"
-  [ -n "$RUNS" ] || die "no CI check runs found for $HEAD_SHA yet"
-  for c in $RUNS; do [ "$c" = success ] || die "CI on $HEAD_SHA is not all green: $RUNS"; done
+  # Status and conclusion together: a pending run has a null conclusion,
+  # which must not read as "nothing to object to".
+  RUNS="$(gh api "repos/freenet/blog/commits/$HEAD_SHA/check-runs?per_page=100" \
+    --jq '.check_runs[] | "\(.name)=\(.status)/\(.conclusion)"')"
+  grep -qx 'check=completed/success' <<<"$RUNS" || die "CI 'check' is not green on $HEAD_SHA: ${RUNS:-no check runs yet}"
+  ! grep -vq '=completed/success$' <<<"$RUNS" || die "CI on $HEAD_SHA is not all green: $RUNS"
 
   # Resolve the key path: environment, then .env, then the default.
   KEY="${BLOG_SIGNING_KEY:-}"
@@ -127,10 +131,14 @@ grep -qF "$EXPECTED_ID" "$ROOT/public/index.xml" || die "built RSS does not poin
 # Hugo still copies them, so check the build output itself.
 IGNORED="$(git -C "$ROOT" ls-files -o -i --exclude-standard -- content static assets layouts)"
 [ -z "$IGNORED" ] || die "gitignored files would be published: $IGNORED"
+# This also refuses a post that merely discusses the key file format. That
+# is deliberate: reword the post (e.g. "signing key") rather than weaken this.
 if grep -rlE 'signing_key|BEGIN [A-Z ]*PRIVATE KEY' "$ROOT/public"; then
   die "public/ contains key-like material (files above)"
 fi
-if [ -n "${SK_HEX:-}" ] && grep -rlF "$SK_HEX" "$ROOT/public" >/dev/null; then
+# The pattern goes in on stdin: grep is an external program, so an argument
+# would put the seed in its process list entry for the whole scan.
+if [ -n "${SK_HEX:-}" ] && printf '%s\n' "$SK_HEX" | grep -rlFf - "$ROOT/public" >/dev/null; then
   die "public/ contains the signing key. Treat it as leaked."
 fi
 unset SK_HEX

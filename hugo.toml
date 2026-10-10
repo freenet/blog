@@ -1,0 +1,34 @@
+# The site is served by a Freenet node at /v1/contract/web/<contract key>/.
+# baseURL MUST stay "/" with relativeURLs = true: every in-page link is then
+# written relative to the current page, so it resolves under the contract
+# prefix on a node running on any port. Putting the contract path in baseURL
+# looks right but makes relativeURLs emit "./v1/contract/web/<key>/..." links,
+# which resolve to a nonexistent path under the current page.
+baseURL = "/"
+relativeURLs = true
+languageCode = "en"
+title = "Freenet Blog"
+enableRobotsTXT = false
+disableKinds = ["taxonomy", "term", "sitemap", "404"]
+
+[params]
+# Absolute address of the site on a default local node. Used only where a
+# link must be absolute (RSS). The key is derived from
+# published-contract/website_contract.wasm + website.parameters and is checked
+# by scripts/publish.sh before every publish.
+freenetURL = "http://127.0.0.1:7509/v1/contract/web/CaK7kGohya2cLhoXQTLgBsrjDVLZKszD6ktexjRSaXCf/"
+description = "Notes and analysis from the Freenet project, published on Freenet."
+
+[markup.goldmark.renderer]
+# Posts embed raw HTML, SVG and scripts (charts).
+unsafe = true
+
+[markup.highlight]
+noClasses = false
+
+[outputs]
+home = ["html", "rss"]
+section = ["html"]
+
+[services.rss]
+limit = 50

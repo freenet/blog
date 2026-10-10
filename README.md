@@ -31,6 +31,11 @@ All internal links are relative (`baseURL = "/"` with `relativeURLs = true`),
 because the site is served under `/v1/contract/web/<key>/`. Do not use
 root-relative links (`/posts/...`) in posts or templates.
 
+The RSS feed (`index.xml`) uses absolute links on the default node port 7509,
+built from `params.freenetURL`. A reader whose node uses another port has to
+adjust them. Feed autodiscovery does not work, because the page runs inside the
+node's sandboxed iframe; link to `index.xml` directly.
+
 ## Publishing
 
 ```bash

@@ -1,0 +1,9 @@
+{{- /* Inline a file from the page bundle verbatim, e.g. a chart:
+       {{< include "chart.html" >}}
+       Keeping chart HTML/JS in its own file avoids Markdown mangling it. */ -}}
+{{- $name := .Get 0 -}}
+{{- with .Page.Resources.Get $name -}}
+{{- .Content | safeHTML -}}
+{{- else -}}
+{{- errorf "include: %q not found in page bundle %s" $name .Page.File.Path -}}
+{{- end -}}

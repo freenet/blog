@@ -1,0 +1,21 @@
+name: check
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Hugo
+        run: |
+          curl -fsSL -o /tmp/hugo.deb https://github.com/gohugoio/hugo/releases/download/v0.154.5/hugo_extended_0.154.5_linux-amd64.deb
+          sudo dpkg -i /tmp/hugo.deb
+      - name: Checks
+        run: scripts/check.sh
+      - name: Contract pin unchanged
+        # The blog's address is derived from these two files. A diff here
+        # moves the blog to a new contract key.
+        run: |
+          sha256sum -c published-contract/SHA256SUMS

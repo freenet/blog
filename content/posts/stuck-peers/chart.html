@@ -1,0 +1,260 @@
+<figure class="viz-root" id="stuck-viz">
+<style>
+#stuck-viz {
+  --surface-1: #fcfcfb; --text-primary: #1a1a19; --text-secondary: #52514e; --text-muted: #6f6e69;
+  --grid: #e2e1dc; --axis: #b9b8b2;
+  --series-1: #2a78d6; --series-2: #eb6834; --trend: #52514e;
+  margin: 1.5rem 0 1.8rem; font-family: var(--sans, system-ui, sans-serif);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) #stuck-viz {
+    --surface-1: #1a1a19; --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #9b9a92;
+    --grid: #33332f; --axis: #55554f; --series-1: #3987e5; --series-2: #d95926; --trend: #c3c2b7;
+  }
+}
+:root[data-theme="dark"] #stuck-viz {
+  --surface-1: #1a1a19; --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #9b9a92;
+  --grid: #33332f; --axis: #55554f; --series-1: #3987e5; --series-2: #d95926; --trend: #c3c2b7;
+}
+#stuck-viz .viz-title { font-weight: 600; font-size: 1rem; color: var(--text-primary); margin: 0 0 0.2rem; }
+#stuck-viz .viz-sub { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 0.6rem; line-height: 1.4; }
+#stuck-viz .viz-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; margin-bottom: 0.4rem; }
+#stuck-viz .viz-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-size: 0.8rem; color: var(--text-secondary); }
+#stuck-viz .viz-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+#stuck-viz .viz-tabs button {
+  font: inherit; font-size: 0.8rem; background: none; color: var(--text-secondary);
+  border: 1px solid var(--grid); padding: 0.15rem 0.6rem; cursor: pointer;
+}
+#stuck-viz .viz-tabs button:first-child { border-radius: 6px 0 0 6px; }
+#stuck-viz .viz-tabs button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+#stuck-viz .viz-tabs button[aria-pressed="true"] { color: var(--text-primary); background: var(--grid); }
+#stuck-viz .viz-plot { position: relative; background: var(--surface-1); }
+#stuck-viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+#stuck-viz svg:focus { outline: 2px solid var(--series-1); outline-offset: 2px; }
+#stuck-viz .tick text { fill: var(--text-muted); font-size: 11px; }
+#stuck-viz .grid line { stroke: var(--grid); stroke-width: 1; }
+#stuck-viz .lbl { fill: var(--text-secondary); font-size: 11px; }
+#stuck-viz .viz-tip {
+  position: absolute; pointer-events: none; min-width: 11rem; max-width: 16rem;
+  background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--grid);
+  border-radius: 6px; padding: 0.45rem 0.6rem; font-size: 0.8rem; line-height: 1.35;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12); opacity: 0; transition: opacity 80ms;
+}
+#stuck-viz .viz-tip .d { color: var(--text-muted); margin-bottom: 0.25rem; }
+#stuck-viz .viz-tip .r { display: flex; align-items: baseline; gap: 0.4rem; }
+#stuck-viz .viz-tip .r b { font-variant-numeric: tabular-nums; min-width: 2.5rem; }
+#stuck-viz .viz-tip .r i { font-style: normal; color: var(--text-secondary); }
+#stuck-viz .viz-tip .k { display: inline-block; width: 12px; height: 0; border-top: 2px solid; flex: none; transform: translateY(-3px); }
+#stuck-viz table { font-size: 0.85rem; }
+#stuck-viz figcaption { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.45; }
+</style>
+<p class="viz-title">Peers on the stuck versions, with an exponential trend</p>
+<p class="viz-sub">Count of distinct peers reporting telemetry. Trend fitted to the points from 14 August onward, projected to the end of March 2027.</p>
+<div class="viz-bar">
+  <div class="viz-legend" aria-hidden="true">
+    <span><svg width="12" height="12"><circle cx="6" cy="6" r="4.5" fill="var(--series-1)"/></svg>0.2.120 + 0.2.121</span>
+    <span><svg width="12" height="12"><rect x="1.5" y="1.5" width="9" height="9" rx="1.5" fill="var(--series-2)"/></svg>All versions below 0.2.122</span>
+    <span><svg width="18" height="12"><line x1="0" y1="6" x2="18" y2="6" stroke="var(--trend)" stroke-width="2"/></svg>Fit</span>
+    <span><svg width="18" height="12"><line x1="0" y1="6" x2="18" y2="6" stroke="var(--trend)" stroke-width="2" stroke-dasharray="4 3"/></svg>Projection</span>
+    <span><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="none" stroke="var(--text-secondary)" stroke-width="1.5"/></svg>Not in fit</span>
+  </div>
+  <div class="viz-tabs" role="group" aria-label="View">
+    <button type="button" data-view="chart" aria-pressed="true">Chart</button><button type="button" data-view="table" aria-pressed="false">Table</button>
+  </div>
+</div>
+<div class="viz-plot" data-pane="chart">
+  <svg viewBox="0 0 680 360" role="img" tabindex="0" aria-label="Line chart of stuck peer counts from August 2026 with an exponential trend projected to March 2027. Use the left and right arrow keys to step through dates. A table view is available."></svg>
+  <div class="viz-tip" role="status" aria-live="polite"></div>
+</div>
+<div data-pane="table" hidden>
+  <table>
+    <thead><tr><th>Date</th><th class="num">Peers</th><th>Cohort</th><th>In fit</th><th class="num">Trend value</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+<figcaption></figcaption>
+<script>
+(function () {
+  var root = document.getElementById("stuck-viz");
+  var NS = "http://www.w3.org/2000/svg";
+  var DAY = 86400000;
+  function D(s) { return Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)); }
+
+  // cohort "a" = peers on 0.2.120 or 0.2.121; cohort "b" = peers on any version below 0.2.122.
+  var data = [
+    { d: "2026-08-13", n: 864, c: "a", fit: false, note: "812 on 0.2.120 + 52 on 0.2.121. Left out of the fit: early-phase drop, different counting method" },
+    { d: "2026-08-14", n: 647, c: "a", fit: true },
+    { d: "2026-08-15", n: 622, c: "a", fit: true },
+    { d: "2026-08-16", n: 587, c: "a", fit: true },
+    { d: "2026-08-21", n: 540, c: "a", fit: true },
+    { d: "2026-08-24", n: 554, c: "a", fit: true },
+    { d: "2026-10-10", n: 407, c: "b", fit: true, note: "Just before the v0.2.143 release" },
+    { d: "2026-10-10", n: 340, c: "b", fit: false, off: 0.0625, note: "1.5 hours after v0.2.143. Left out of the fit" }
+  ];
+  data.forEach(function (p) { p.t = D(p.d) + (p.off || 0) * DAY; });
+
+  // Least-squares fit of ln(n) against days since the first fitted point.
+  var fitPts = data.filter(function (p) { return p.fit; });
+  var t0 = fitPts[0].t;
+  var xs = fitPts.map(function (p) { return (p.t - t0) / DAY; });
+  var ys = fitPts.map(function (p) { return Math.log(p.n); });
+  var mx = xs.reduce(function (a, b) { return a + b; }) / xs.length;
+  var my = ys.reduce(function (a, b) { return a + b; }) / ys.length;
+  var sxy = 0, sxx = 0;
+  xs.forEach(function (x, i) { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) * (x - mx); });
+  var k = sxy / sxx, a = my - k * mx;
+  function trend(t) { return Math.exp(a + k * (t - t0) / DAY); }
+  var halfLife = Math.log(2) / -k;
+  var fitEnd = D("2026-10-10"), projEnd = D("2027-03-31");
+
+  var W = 680, H = 360, m = { l: 44, r: 16, t: 12, b: 30 };
+  var xMin = D("2026-08-08"), xMax = projEnd, yMax = 900;
+  function X(t) { return m.l + (t - xMin) / (xMax - xMin) * (W - m.l - m.r); }
+  function Y(v) { return m.t + (1 - v / yMax) * (H - m.t - m.b); }
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    for (var key in attrs) e.setAttribute(key, attrs[key]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  var svg = root.querySelector("svg");
+  var grid = el("g", { "class": "grid" }, svg);
+  var ticks = el("g", { "class": "tick" }, svg);
+  for (var v = 0; v <= yMax; v += 150) {
+    el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v) }, grid);
+    var ty = el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, ticks);
+    ty.textContent = v;
+  }
+  var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var monthStarts = [];
+  for (var y = 2026, mo = 8; y < 2027 || mo <= 3; mo++) {
+    if (mo > 12) { mo = 1; y++; }
+    var t = Date.UTC(y, mo - 1, 1);
+    if (t > xMax) break;
+    monthStarts.push(t);
+    var tx = el("text", { x: X(t), y: H - m.b + 18, "text-anchor": "middle" }, ticks);
+    tx.textContent = months[mo - 1] + (mo === 1 ? " " + y : "");
+  }
+  el("line", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), stroke: "var(--axis)", "stroke-width": 1 }, svg);
+
+  function path(from, to) {
+    var s = "";
+    for (var t = from; t <= to; t += DAY) s += (s ? "L" : "M") + X(t).toFixed(1) + "," + Y(trend(t)).toFixed(1);
+    return s;
+  }
+  el("path", { d: path(t0, fitEnd), fill: "none", stroke: "var(--trend)", "stroke-width": 2 }, svg);
+  el("path", { d: path(fitEnd, projEnd), fill: "none", stroke: "var(--trend)", "stroke-width": 2, "stroke-dasharray": "5 4" }, svg);
+
+  var cross = el("line", { y1: m.t, y2: H - m.b, stroke: "var(--text-muted)", "stroke-width": 1, opacity: 0 }, svg);
+  var marks = el("g", {}, svg);
+  data.forEach(function (p) {
+    var color = p.c === "a" ? "var(--series-1)" : "var(--series-2)";
+    var cx = X(p.t), cy = Y(p.n), common;
+    if (p.c === "a") {
+      common = { cx: cx, cy: cy, r: 5 };
+      if (p.fit) el("circle", Object.assign({ fill: color, stroke: "var(--surface-1)", "stroke-width": 2 }, common), marks);
+      else el("circle", Object.assign({ fill: "var(--surface-1)", stroke: color, "stroke-width": 2 }, common), marks);
+    } else {
+      common = { x: cx - 5, y: cy - 5, width: 10, height: 10, rx: 1.5 };
+      if (p.fit) el("rect", Object.assign({ fill: color, stroke: "var(--surface-1)", "stroke-width": 2 }, common), marks);
+      else el("rect", Object.assign({ fill: "var(--surface-1)", stroke: color, "stroke-width": 2 }, common), marks);
+    }
+  });
+  function label(text, x, y, anchor) {
+    var t = el("text", { x: x, y: y, "text-anchor": anchor || "start", "class": "lbl" }, svg);
+    t.textContent = text;
+  }
+  label("864, not in fit", X(D("2026-08-13")) + 9, Y(864) + 4);
+  label("407 before v0.2.143", X(D("2026-10-10")) + 10, Y(407) - 4);
+  label("340 after", X(D("2026-10-10")) + 10, Y(340) + 12);
+  var endV = trend(projEnd);
+  label("~" + Math.round(endV) + " by 31 Mar", X(projEnd), Y(endV) - 10, "end");
+
+  // Crosshair + tooltip. Snaps to the nearest day; lists every observation
+  // on that day plus the trend value.
+  var tip = root.querySelector(".viz-tip");
+  var plot = root.querySelector(".viz-plot");
+  function fmt(t) { var d = new Date(t); return d.getUTCDate() + " " + months[d.getUTCMonth()] + " " + d.getUTCFullYear(); }
+  function row(color, dash, value, text) {
+    var r = document.createElement("div"); r.className = "r";
+    var key = document.createElement("span"); key.className = "k";
+    key.style.borderTopColor = color; if (dash) key.style.borderTopStyle = "dashed";
+    var b = document.createElement("b"); b.textContent = value;
+    var i = document.createElement("i"); i.textContent = text;
+    r.appendChild(key); r.appendChild(b); r.appendChild(i);
+    return r;
+  }
+  function show(day) {
+    day = Math.max(D("2026-08-13"), Math.min(projEnd, day));
+    tip.textContent = "";
+    var dd = document.createElement("div"); dd.className = "d"; dd.textContent = fmt(day); tip.appendChild(dd);
+    data.forEach(function (p) {
+      if (D(p.d) !== day) return;
+      tip.appendChild(row(p.c === "a" ? "var(--series-1)" : "var(--series-2)", false, p.n,
+        (p.c === "a" ? "on 0.2.120/0.2.121" : "below 0.2.122") + (p.note ? ". " + p.note : "")));
+    });
+    if (day >= t0) tip.appendChild(row("var(--trend)", day > fitEnd, Math.round(trend(day)), day > fitEnd ? "projected" : "fitted trend"));
+    var x = X(day);
+    cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("opacity", 1);
+    var box = svg.getBoundingClientRect(), scale = box.width / W, px = x * scale;
+    tip.style.opacity = 1;
+    var tw = tip.offsetWidth;
+    tip.style.left = (px + 12 + tw > box.width ? px - 12 - tw : px + 12) + "px";
+    tip.style.top = (12 * scale) + "px";
+    current = day;
+  }
+  function hide() { tip.style.opacity = 0; cross.setAttribute("opacity", 0); }
+  var current = null;
+  svg.addEventListener("pointermove", function (e) {
+    var box = svg.getBoundingClientRect();
+    var vx = (e.clientX - box.left) / box.width * W;
+    var t = xMin + (vx - m.l) / (W - m.l - m.r) * (xMax - xMin);
+    var day = Math.round(t / DAY) * DAY;
+    // Snap to an observation when the pointer is within 3 days of one.
+    data.forEach(function (p) { if (Math.abs(D(p.d) - t) < 3 * DAY) day = D(p.d); });
+    show(day);
+  });
+  svg.addEventListener("pointerleave", hide);
+  var stops = data.map(function (p) { return D(p.d); }).concat(monthStarts.filter(function (t) { return t > fitEnd; }), [projEnd]);
+  stops = stops.filter(function (t, i) { return stops.indexOf(t) === i; }).sort(function (x, y) { return x - y; });
+  svg.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    e.preventDefault();
+    var i = current === null ? -1 : stops.indexOf(current);
+    i = e.key === "ArrowRight" ? Math.min(stops.length - 1, i + 1) : Math.max(0, i - 1);
+    show(stops[i]);
+  });
+  svg.addEventListener("focus", function () { show(stops[0]); });
+  svg.addEventListener("blur", hide);
+
+  // Table view.
+  var tbody = root.querySelector("tbody");
+  data.concat([{ d: "2027-01-01", proj: true }, { d: "2027-03-31", proj: true }]).forEach(function (p) {
+    var tr = document.createElement("tr");
+    var tt = p.t || D(p.d);
+    var cells = p.proj
+      ? [fmt(D(p.d)), "", "projection", "", Math.round(trend(D(p.d)))]
+      : [fmt(D(p.d)) + (p.off ? " (+1.5 h)" : ""), p.n, p.c === "a" ? "0.2.120 + 0.2.121" : "below 0.2.122", p.fit ? "yes" : "no", Math.round(trend(tt))];
+    cells.forEach(function (c, i) {
+      var td = document.createElement("td"); td.textContent = c;
+      if (i === 1 || i === 4) td.className = "num";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  root.querySelectorAll(".viz-tabs button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      root.querySelectorAll(".viz-tabs button").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+      root.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.getAttribute("data-pane") !== b.getAttribute("data-view"); });
+    });
+  });
+
+  root.querySelector("figcaption").textContent =
+    "Fit: " + (-k * 100).toFixed(2) + "% fewer peers per day, a half-life of about " + Math.round(halfLife) +
+    " days. Fitted on " + fitPts.length + " points (14 August to 10 October, the October point counting the wider cohort). " +
+    "Projected: about " + Math.round(trend(D("2027-01-01"))) + " peers on 1 January 2027 and " + Math.round(endV) + " on 31 March 2027. " +
+    "Telemetry is kept for about three days, so each point is a separate snapshot, not a continuous series.";
+})();
+</script>
+</figure>

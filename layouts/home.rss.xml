@@ -1,0 +1,24 @@
+{{- /* RSS needs absolute links. They are built from params.freenetURL because
+       baseURL is "/" (see hugo.toml). */ -}}
+{{- $base := strings.TrimSuffix "/" site.Params.freenetURL -}}
+{{- $pages := first 50 (where site.RegularPages "Section" "posts") -}}
+{{- printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ site.Title }}</title>
+    <link>{{ $base }}/</link>
+    <description>{{ site.Params.description }}</description>
+    <language>{{ site.Language.LanguageCode | default "en" }}</language>
+    {{ with $pages }}<lastBuildDate>{{ (index . 0).Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</lastBuildDate>{{ end }}
+    <atom:link href="{{ $base }}/index.xml" rel="self" type="application/rss+xml" />
+    {{- range $pages }}
+    <item>
+      <title>{{ .Title }}</title>
+      <link>{{ $base }}{{ .RelPermalink }}</link>
+      <guid isPermaLink="true">{{ $base }}{{ .RelPermalink }}</guid>
+      <pubDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</pubDate>
+      <description>{{ .Summary | transform.XMLEscape | safeHTML }}</description>
+    </item>
+    {{- end }}
+  </channel>
+</rss>

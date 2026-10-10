@@ -37,7 +37,7 @@ Three choices in that fit need stating:
 - **The October 340 is left out.** It was taken 1.5 hours after v0.2.143 changed how the network treats these peers (see below). One reading that soon after a release cannot separate a trend from the effect of the release.
 - **Fitting only the August points gives the wrong answer.** The five points from 14 to 24 August alone give 1.6% per day, which predicts about 256 peers by 10 October. The measured count was 407, from a group that is, if anything, larger. Ten days of snapshots that each vary by about 30 peers are not enough to estimate a rate this slow.
 
-A separate August estimate followed individual peers instead of comparing totals: of 540 peers on the stuck versions on 21 August, 14 (2.6%) were on a newer version 79 hours later. That is about 0.8% per day, a half-life of about 90 days. Earlier internal write-ups rounded the August estimates to about 1% per day and a 70-day half-life. All of these agree on the conclusion: the group shrinks over months, not weeks.
+A separate August estimate followed individual peers instead of comparing totals: of 540 peers on the stuck versions on 21 August, 14 (2.6%) were on a newer version 79 hours later. That is about 0.8% per day, a half-life of about 90 days. All of these agree on the conclusion: the group shrinks over months, not weeks.
 
 A constant proportional rate also means the count never reaches zero. It keeps falling by the same fraction, so the last few dozen peers take as long to halve as the first several hundred did. On the fitted rate the group would drop below 50 peers in mid-2027.
 

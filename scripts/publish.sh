@@ -133,13 +133,13 @@ IGNORED="$(git -C "$ROOT" ls-files -o -i --exclude-standard -- content static as
 [ -z "$IGNORED" ] || die "gitignored files would be published: $IGNORED"
 # This also refuses a post that merely discusses the key file format. That
 # is deliberate: reword the post (e.g. "signing key") rather than weaken this.
-if grep -rlE 'signing_key|BEGIN [A-Z ]*PRIVATE KEY' "$ROOT/public"; then
-  die "public/ contains key-like material (files above)"
-fi
+rc=0; grep -rlE 'signing_key|BEGIN [A-Z ]*PRIVATE KEY' "$ROOT/public" || rc=$?
+[ "$rc" = 1 ] || die "public/ contains key-like material (files above), or the scan failed (grep exit $rc)"
 # The pattern goes in on stdin: grep is an external program, so an argument
 # would put the seed in its process list entry for the whole scan.
-if [ -n "${SK_HEX:-}" ] && printf '%s\n' "$SK_HEX" | grep -rlFf - "$ROOT/public" >/dev/null; then
-  die "public/ contains the signing key. Treat it as leaked."
+if [ -n "${SK_HEX:-}" ]; then
+  rc=0; printf '%s\n' "$SK_HEX" | grep -rlFf - "$ROOT/public" >/dev/null || rc=$?
+  [ "$rc" = 1 ] || die "public/ contains the signing key (treat it as leaked), or the scan failed (grep exit $rc)"
 fi
 unset SK_HEX
 

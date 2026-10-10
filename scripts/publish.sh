@@ -21,7 +21,10 @@ DEFAULT_KEY=/home/ian/code/freenet/keys/blog/website-key.toml
 WASM="$ROOT/published-contract/website_contract.wasm"
 PARAMS="$ROOT/published-contract/website.parameters"
 ID_FILE="$ROOT/published-contract/contract-id.txt"
-NODE_HTTP="${FREENET_NODE_HTTP:-http://127.0.0.1:7509}"
+# fdev and the read-back must talk to the same node: the default local node on
+# 7509. Clear the variables that would point fdev elsewhere.
+NODE_HTTP=http://127.0.0.1:7509
+unset MODE FREENET_NODE_URL WS_API_PORT
 
 die() { echo "error: $*" >&2; exit 1; }
 
@@ -32,7 +35,7 @@ case "${1:-}" in
   *) die "usage: $0 [--preview]" ;;
 esac
 
-for cmd in hugo fdev git curl xxd; do
+for cmd in hugo fdev git curl xxd openssl gh; do
   command -v "$cmd" >/dev/null || die "$cmd not found on PATH"
 done
 
@@ -55,6 +58,7 @@ if [ "$PREVIEW" = 1 ]; then
   (umask 077; XDG_CONFIG_HOME="$WORK/xdg" fdev website init blog >/dev/null)
   # Read only the public half.
   VK_HEX="$(sed -n 's/^verifying_key = "\([0-9a-f]*\)"$/\1/p' "$WORK/xdg/freenet/website-keys/blog.toml")"
+  [ "${#VK_HEX}" = 64 ] || die "could not read the preview key's verifying key (fdev key format changed?)"
   printf '%s' "$VK_HEX" | xxd -r -p > "$WORK/preview.parameters"
   TARGET_ID="$(fdev get-contract-id --code "$WASM" --parameters "$WORK/preview.parameters" | tr -d '[:space:]')"
   echo "PREVIEW publish under throwaway contract $TARGET_ID"
@@ -64,7 +68,12 @@ else
   [ "$BRANCH" = main ] || die "on branch '$BRANCH'. Production publishes run from main after merging. Use --preview to check a branch."
   [ -z "$(git -C "$ROOT" status --porcelain)" ] || die "working tree is not clean"
   git -C "$ROOT" fetch -q origin main
-  [ "$(git -C "$ROOT" rev-parse HEAD)" = "$(git -C "$ROOT" rev-parse origin/main)" ] || die "HEAD is not origin/main. Pull first."
+  HEAD_SHA="$(git -C "$ROOT" rev-parse HEAD)"
+  [ "$HEAD_SHA" = "$(git -C "$ROOT" rev-parse origin/main)" ] || die "HEAD is not origin/main. Pull first."
+  # CI must be green on this exact commit.
+  RUNS="$(gh api "repos/freenet/blog/commits/$HEAD_SHA/check-runs" --jq '[.check_runs[] | .conclusion] | join(" ")')"
+  [ -n "$RUNS" ] || die "no CI check runs found for $HEAD_SHA yet"
+  for c in $RUNS; do [ "$c" = success ] || die "CI on $HEAD_SHA is not all green: $RUNS"; done
 
   # Resolve the key path: environment, then .env, then the default.
   KEY="${BLOG_SIGNING_KEY:-}"
@@ -86,9 +95,16 @@ else
     *) die "signing key $KEY_REAL has mode $PERMS; expected 600" ;;
   esac
 
-  # The key must be the one the committed parameters were made from. Read
-  # only the public half; never print the file.
-  VK_HEX="$(sed -n 's/^verifying_key = "\([0-9a-f]*\)"$/\1/p' "$KEY_REAL")"
+  # The key must be the one the committed parameters were made from. fdev
+  # derives the public key from the signing_key line (it ignores the stored
+  # verifying_key), so derive it the same way here: an Ed25519 PKCS#8 DER
+  # prefix + the 32-byte seed, through openssl. The seed goes through a pipe
+  # only (printf is a builtin, so it never appears in a process list) and is
+  # never printed.
+  SK_HEX="$(sed -n 's/^signing_key = "\([0-9a-f]\{64\}\)"$/\1/p' "$KEY_REAL")"
+  [ "${#SK_HEX}" = 64 ] || die "could not read signing_key from $KEY_REAL"
+  VK_HEX="$({ printf '302e020100300506032b657004220420'; printf '%s' "$SK_HEX"; } | xxd -r -p \
+    | openssl pkey -inform DER -pubout -outform DER | tail -c 32 | xxd -p -c 64)"
   [ "$VK_HEX" = "$(xxd -p -c 64 "$PARAMS")" ] || die "signing key at $KEY_REAL does not match published-contract/website.parameters"
 
   # fdev website reads keys from $XDG_CONFIG_HOME/freenet/website-keys/<name>.toml.
@@ -104,6 +120,20 @@ echo "building $BUILD_ID"
 rm -rf "$ROOT/public"
 HUGO_PARAMS_BUILDID="$BUILD_ID" hugo --minify --source "$ROOT" --destination "$ROOT/public" >/dev/null
 [ -f "$ROOT/public/index.html" ] || die "hugo produced no index.html"
+grep -qF "$EXPECTED_ID" "$ROOT/public/index.xml" || die "built RSS does not point at $EXPECTED_ID (check params.freenetURL and HUGO_* env vars)"
+
+# Nothing key-like may reach public/: it becomes part of a signed, permanent
+# publish. Gitignored files under content/ or static/ are invisible to git but
+# Hugo still copies them, so check the build output itself.
+IGNORED="$(git -C "$ROOT" ls-files -o -i --exclude-standard -- content static assets layouts)"
+[ -z "$IGNORED" ] || die "gitignored files would be published: $IGNORED"
+if grep -rlE 'signing_key|BEGIN [A-Z ]*PRIVATE KEY' "$ROOT/public"; then
+  die "public/ contains key-like material (files above)"
+fi
+if [ -n "${SK_HEX:-}" ] && grep -rlF "$SK_HEX" "$ROOT/public" >/dev/null; then
+  die "public/ contains the signing key. Treat it as leaked."
+fi
+unset SK_HEX
 
 echo "publishing contract $TARGET_ID"
 XDG_CONFIG_HOME="$WORK/xdg" fdev website update "$ROOT/public" --key blog --contract-wasm "$WASM" | tee "$WORK/fdev.out"
@@ -119,4 +149,4 @@ for _ in $(seq 1 30); do
   fi
   sleep 2
 done
-die "published, but $URL did not serve build $BUILD_ID within 60s. Check it in a browser before republishing."
+die "published, but $URL did not serve build $BUILD_ID within 60s. Check it in a browser before republishing. If fdev reported success, the contract may have rejected the update: it requires a version (unix seconds) above the one it holds, so a previous publish from a machine with a clock ahead of this one blocks it."

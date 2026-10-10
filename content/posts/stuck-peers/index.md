@@ -23,7 +23,7 @@ Each number below is the count of distinct peers reporting one of the stuck vers
 | 10 October, before the v0.2.143 release | 407 | every version below 0.2.122 |
 | 10 October, 1.5 hours after the release | 340 | every version below 0.2.122 |
 
-The two October counts measure a slightly larger group than the August ones. They include every peer older than 0.2.122, not only 0.2.120 and 0.2.121. On 13 August, peers on releases older than 0.2.120 numbered in the tens, so the October points overstate the stuck group a little.
+The two October counts measure a slightly larger group than the August ones. They include every peer older than 0.2.122, not only 0.2.120 and 0.2.121. On 12 August about 4% of the network, roughly 70 peers, had never reached 0.2.120, so the October points overstate the stuck group a little.
 
 {{< include "chart.html" >}}
 
@@ -33,11 +33,11 @@ Fitting an exponential curve to the points from 14 August to the 10 October coun
 
 Three choices in that fit need stating:
 
-- **The 13 August point is left out.** The drop from 864 to 647 in one day is far larger than anything after it. Part of it is a real early fall-off, and part is that the 13 August figure came from a different capture with a different way of counting peers. Including it would make the fit describe that first day, not the following two months.
+- **The 13 August point is left out.** The drop from 864 to 647 in one day is far larger than any later change, and the 13 August figure came from a different capture with a different way of counting peers, so the two are not directly comparable. Including it would make the fit describe that first day, not the following two months.
 - **The October 340 is left out.** It was taken 1.5 hours after v0.2.143 changed how the network treats these peers (see below). One reading that soon after a release cannot separate a trend from the effect of the release.
 - **Fitting only the August points gives the wrong answer.** The five points from 14 to 24 August alone give 1.6% per day, which predicts about 256 peers by 10 October. The measured count was 407, from a group that is, if anything, larger. Ten days of snapshots that each vary by about 30 peers are not enough to estimate a rate this slow.
 
-A separate August estimate, made by following individual peers instead of comparing totals, gave about 1% per day: of 540 peers on the stuck versions on 21 August, 14 (2.6%) were on a newer version 79 hours later. That corresponds to a half-life of about 70 days. Both methods agree on the conclusion: the group shrinks over months, not weeks.
+A separate August estimate followed individual peers instead of comparing totals: of 540 peers on the stuck versions on 21 August, 14 (2.6%) were on a newer version 79 hours later. That is about 0.8% per day, a half-life of about 90 days. Comparisons of totals in August gave figures nearer 1% per day, a half-life of about 70 days. All of these agree on the conclusion: the group shrinks over months, not weeks.
 
 A constant proportional rate also means the count never reaches zero. It keeps falling by the same fraction, so the last few dozen peers take as long to halve as the first several hundred did. On the fitted rate the group would drop below 50 peers in mid-2027.
 
@@ -51,7 +51,7 @@ These machines do restart. In one 3.7-hour window, peers on 0.2.120 logged 111 s
 
 The platform split explains why. Platform is only reported when a peer starts up, so it can only be measured for peers that restarted during a window. Among those, about 80% of the 0.2.120 peers ran Windows, against about 40% of peers on the current version at the time. Restart-observed samples over-represent machines that restart often, so the 80% is probably too high in absolute terms, but the comparison holds: Windows is about twice as common among the stuck peers.
 
-On Linux, the systemd service runs `freenet update` after the node exits with an error, through an `ExecStopPost` hook. That hook is what moved some peers off the broken versions in the first weeks. Windows has no equivalent: nothing runs the updater when the node exits ([#5228](https://github.com/freenet/freenet-core/issues/5228)). A Windows peer on 0.2.120 restarts on 0.2.120 indefinitely.
+On Linux, the systemd service runs `freenet update` after the node exits with an error, through an `ExecStopPost` hook. That hook is what moved some peers off the broken versions in the first weeks. Windows has no equivalent: nothing runs the updater after a failed exit ([#5228](https://github.com/freenet/freenet-core/issues/5228)). A Windows peer on 0.2.120 restarts on 0.2.120 indefinitely.
 
 ## What v0.2.143 changed
 
@@ -59,7 +59,7 @@ Release v0.2.143, cut on 10 October, raised the minimum version that peers accep
 
 In the hours after the release, the gateways refused roughly 1,500 to 2,500 connection attempts per hour from these old peers. That is a negligible load for a gateway.
 
-Before the release, the stuck peers were not measurably harming the rest of the network. In August they had normal memory use and normal traffic, produced no protocol errors, and 0.2.120 peers had a stream-transfer failure rate about 1.1 times that of current peers. The cost of leaving them connected was that they could not receive security fixes.
+Before the release, the stuck peers did little harm to the rest of the network. In August they had normal memory use and normal traffic and produced no protocol errors. Transfers to 0.2.120 peers failed about 1.1 times as often as transfers to current peers. The 21 peers on 0.2.121 were worse, at about 2.4 times. The cost of leaving them connected was that they could not receive security fixes.
 
 ## Limits of this data
 

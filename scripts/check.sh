@@ -13,10 +13,13 @@ if grep -rnF "—" "$ROOT/content" "$ROOT/layouts" "$ROOT/assets" "$ROOT/README.
 fi
 
 # A website key file contains a `signing_key = "<64 hex>"` line.
-if git -C "$ROOT" grep -nE 'signing_key *= *"[0-9a-fA-F]{64}"' -- . ':!scripts/check.sh' >/dev/null 2>&1; then
-  echo "error: a tracked file contains a signing key. Remove it and treat the key as leaked." >&2
-  fail=1
-fi
+rc=0
+git -C "$ROOT" grep -qE 'signing_key *= *"[0-9a-fA-F]{64}"' -- . ':!scripts/check.sh' || rc=$?
+case "$rc" in
+  0) echo "error: a tracked file contains a signing key. Remove it and treat the key as leaked." >&2; fail=1 ;;
+  1) ;;
+  *) echo "error: git grep failed (exit $rc); cannot check for tracked keys" >&2; fail=1 ;;
+esac
 if git -C "$ROOT" ls-files | grep -E '(^|/)(website-key|.*\.key)(\.toml)?$|\.env$'; then
   echo "error: key-like or .env file tracked (above)." >&2
   fail=1

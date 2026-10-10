@@ -14,8 +14,23 @@ jobs:
           sudo dpkg -i /tmp/hugo.deb
       - name: Checks
         run: scripts/check.sh
-      - name: Contract pin unchanged
-        # The blog's address is derived from these two files. A diff here
-        # moves the blog to a new contract key.
+      - name: Contract key unchanged
+        # The blog's address is BLAKE3(BLAKE3(wasm) || parameters), base58.
+        # It is derived here independently of fdev and compared against a value
+        # written in this file, so moving the blog to a new address needs a
+        # visible edit to this workflow, not just to files in the same diff.
+        env:
+          EXPECTED: CaK7kGohya2cLhoXQTLgBsrjDVLZKszD6ktexjRSaXCf
         run: |
-          sha256sum -c published-contract/SHA256SUMS
+          pip install --quiet blake3==1.0.5 base58==2.1.1
+          derived=$(python3 -I -c 'import blake3, base58
+          w = open("published-contract/website_contract.wasm", "rb").read()
+          p = open("published-contract/website.parameters", "rb").read()
+          print(base58.b58encode(blake3.blake3(blake3.blake3(w).digest() + p).digest()).decode())')
+          echo "derived contract key: $derived"
+          test "$derived" = "$EXPECTED"
+          test "$(tr -d '[:space:]' < published-contract/contract-id.txt)" = "$EXPECTED"
+          grep -qF "$EXPECTED" hugo.toml
+          grep -qF "$EXPECTED" README.md
+          hugo --minify --quiet --destination /tmp/site
+          grep -qF "$EXPECTED" /tmp/site/index.xml

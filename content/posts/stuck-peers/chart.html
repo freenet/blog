@@ -29,8 +29,9 @@
 #stuck-viz .viz-tabs button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
 #stuck-viz .viz-tabs button[aria-pressed="true"] { color: var(--text-primary); background: var(--grid); }
 #stuck-viz .viz-plot { position: relative; background: var(--surface-1); }
-#stuck-viz svg { display: block; width: 100%; height: auto; overflow: visible; }
-#stuck-viz svg:focus { outline: 2px solid var(--series-1); outline-offset: 2px; }
+#stuck-viz .viz-plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+#stuck-viz .viz-legend svg { flex: none; }
+#stuck-viz .viz-plot svg:focus { outline: 2px solid var(--series-1); outline-offset: 2px; }
 #stuck-viz .tick text { fill: var(--text-muted); font-size: 11px; }
 #stuck-viz .grid line { stroke: var(--grid); stroke-width: 1; }
 #stuck-viz .lbl { fill: var(--text-secondary); font-size: 11px; }
@@ -168,7 +169,7 @@
   label("407 before v0.2.143", X(D("2026-10-10")) + 10, Y(407) - 4);
   label("340 after", X(D("2026-10-10")) + 10, Y(340) + 12);
   var endV = trend(projEnd);
-  label("~" + Math.round(endV) + " by 31 Mar", X(projEnd), Y(endV) - 10, "end");
+  label("~" + Math.round(endV) + " by 31 Mar", X(projEnd), Y(endV) + 18, "end");
 
   // Crosshair + tooltip. Snaps to the nearest day; lists every observation
   // on that day plus the trend value.

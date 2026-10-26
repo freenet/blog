@@ -8,8 +8,15 @@
   --rule: #e2e1dc;
   --link: #1c5cab;
   --code-bg: #f0efec;
-  --serif: Charter, "Bitstream Charter", "Iowan Old Style", "Sitka Text", Cambria, Georgia, serif;
+  /* Cambria comes last: on Linux fontconfig answers it with Caladea, a
+     condensed face that packed ~85 characters into a line. Chrome cannot use
+     the Type 1 "Bitstream Charter" most Linux systems ship, so Noto Serif and
+     DejaVu Serif are named explicitly ahead of it. */
+  --serif: Charter, "Iowan Old Style", "Sitka Text", Georgia, "Noto Serif", "DejaVu Serif", Cambria, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Reading width for prose, and the wider limit for tables, code and charts. */
+  --measure: 45rem;
+  --wide: 60rem;
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
 }
 @media (prefers-color-scheme: dark) {
@@ -28,7 +35,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0 auto; max-width: 44rem; padding: 0 16px;
+  margin: 0; padding: 0 16px;
   background: var(--bg); color: var(--text);
   font-family: var(--serif); font-size: 1.125rem; line-height: 1.65;
 }
@@ -47,6 +54,17 @@ a { color: var(--link); text-underline-offset: 0.15em; }
   border-radius: 6px; padding: 0.1rem 0.5rem; cursor: pointer;
 }
 main { padding: 1.5rem 0 3rem; }
+/* The page spans the iframe; each block is centred at the reading width, and
+   tables, code and charts may use up to --wide. Nothing is wider than the
+   body's content box, so phones get the full width minus the 16px gutter. */
+.site-header, .site-footer, main > :not(article), .post-header, .post-body > * {
+  max-width: var(--measure); margin-left: auto; margin-right: auto;
+}
+.post-body > :is(pre, table, .viz-root, .wide) { max-width: min(100%, var(--wide)); }
+/* A table is as wide as its content: never narrower than the prose column (so
+   its left edge lines up with the text), never wider than --wide; past that it
+   scrolls inside itself. */
+.post-body > table { width: max-content; min-width: min(100%, var(--measure)); }
 .site-footer {
   border-top: 1px solid var(--rule); padding: 1rem 0 2rem;
   font-family: var(--sans); font-size: 0.875rem; color: var(--muted);
@@ -68,11 +86,11 @@ p, ul, ol, blockquote, table, figure, pre { margin: 0 0 1.1rem; }
 .post-list a:hover { text-decoration: underline; }
 .post-list p { margin: 0.3rem 0 0; color: var(--text-2); font-size: 1rem; }
 
-blockquote { margin-left: 0; padding-left: 1rem; border-left: 3px solid var(--rule); color: var(--text-2); }
+blockquote { padding-left: 1rem; border-left: 3px solid var(--rule); color: var(--text-2); }
 code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 0.1em 0.3em; border-radius: 4px; }
 pre { background: var(--code-bg); padding: 0.9rem 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
 pre code { background: none; padding: 0; }
-.post-body table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 0.95rem; display: block; overflow-x: auto; }
+.post-body table { border-collapse: collapse; font-family: var(--sans); font-size: 0.95rem; display: block; overflow-x: auto; }
 .post-body th, .post-body td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--rule); }
 .post-body th { color: var(--text-2); font-weight: 600; }
 .post-body td.num, .post-body th.num { text-align: right; font-variant-numeric: tabular-nums; }

@@ -6,7 +6,7 @@ description: "A change to our build machine put AVX2 instructions into the 0.2.1
 
 The Linux x86_64 build of Freenet 0.2.152, released on 30 October 2026, crashes at startup on any CPU without AVX2. We caused this by accident: the machine that builds our releases changed, and nothing checked the result. A user with two Dell Wyse 5070 nodes reported it the next morning.
 
-A fix is in review as [#6061](https://github.com/freenet/freenet-core/pull/6061) and has not been released yet.
+A fix is in review as [#6061](https://github.com/freenet/freenet-core/pull/6061) and has not been released yet. In the meantime we have marked 0.2.151 as the latest release, so new installs and pending updates no longer receive 0.2.152.
 
 > **If your node stopped after updating to 0.2.152,** run `grep -c avx2 /proc/cpuinfo`. A result of 0 means your CPU, or the CPU your virtual machine is allowed to see, does not have AVX2, and this bug affects you. See [How to recover](#how-to-recover).
 
@@ -35,18 +35,11 @@ The machines most likely to be affected are Celeron, Pentium and Atom mini PCs, 
 
 **If your node auto-updated and runs as the Freenet service,** it may have recovered without your help. After three crashes in a row following an update, the supervisor restores the previous binary and refuses to install the bad version again. Check with `freenet --version`. We tested this logic under emulation by running the post-crash step by hand, and it restored 0.2.151 on the third crash. We have not tested it under a real systemd service on affected hardware.
 
-**If your node is still on 0.2.152,** install 0.2.151 by hand from the [0.2.151 release](https://github.com/freenet/freenet-core/releases/tag/v0.2.151), then stop it from updating back to 0.2.152:
-
-```bash
-mkdir -p ~/.local/state/freenet
-echo 0.2.152 > ~/.local/state/freenet/known_bad_version
-```
-
-Run this as the user that runs the node. This is the file the automatic rollback writes. The pin applies only to 0.2.152, so a later release will still install.
+**If your node is still on 0.2.152,** install 0.2.151 by hand from the [0.2.151 release](https://github.com/freenet/freenet-core/releases/tag/v0.2.151). We have marked 0.2.151 as the latest release, so it will not update itself back to 0.2.152, and it will update normally when a fixed release is published.
 
 **If you run a virtual machine on a host that has AVX2,** you can instead expose the host's CPU features to the VM. In Proxmox, set the VM's CPU type to `host`. Containers already see the host's CPU, so this does not apply to them.
 
-**New installs on these CPUs** will crash on first start for as long as 0.2.152 is the latest release.
+**New installs** now get 0.2.151, because we have marked it as the latest release on GitHub. Nodes that are running 0.2.152 on CPUs with AVX2 are unaffected and stay on 0.2.152.
 
 ## What went wrong
 

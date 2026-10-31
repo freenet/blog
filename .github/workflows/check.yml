@@ -5,7 +5,9 @@ on:
     branches: [main]
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to Ubuntu 26.04, whose Python 3.14 cannot build
+    # the pinned blake3 package.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install Hugo

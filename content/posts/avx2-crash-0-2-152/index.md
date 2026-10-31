@@ -6,7 +6,7 @@ description: "A change to our build machine put AVX2 instructions into the 0.2.1
 
 The Linux x86_64 build of Freenet 0.2.152, released on 30 October 2026, crashes at startup on any CPU without AVX2. We caused this by accident: the machine that builds our releases changed, and nothing checked the result. A user with two Dell Wyse 5070 nodes reported it the next morning.
 
-A fix is in review as [#6061](https://github.com/freenet/freenet-core/pull/6061) and has not been released yet. In the meantime we have marked 0.2.151 as the latest release, so new installs and pending updates no longer receive 0.2.152.
+**Update:** [0.2.153](https://github.com/freenet/freenet-core/releases/tag/v0.2.153), released later on 31 October, fixes this. Its binary runs in `network` mode under emulation on the CPU models that crashed. We have not run it on physical affected hardware.
 
 > **If your node stopped after updating to 0.2.152,** run `grep -c avx2 /proc/cpuinfo`. A result of 0 means your CPU, or the CPU your virtual machine is allowed to see, does not have AVX2, and this bug affects you. See [How to recover](#how-to-recover).
 
@@ -35,11 +35,11 @@ The machines most likely to be affected are Celeron, Pentium and Atom mini PCs, 
 
 **If your node auto-updated and runs as the Freenet service,** it may have recovered without your help. After three crashes in a row following an update, the supervisor restores the previous binary and refuses to install the bad version again. Check with `freenet --version`. We tested this logic under emulation by running the post-crash step by hand, and it restored 0.2.151 on the third crash. We have not tested it under a real systemd service on affected hardware.
 
-**If your node is still on 0.2.152,** install 0.2.151 by hand from the [0.2.151 release](https://github.com/freenet/freenet-core/releases/tag/v0.2.151). We have marked 0.2.151 as the latest release, so it will not update itself back to 0.2.152, and it will update normally when a fixed release is published.
+**If your node is still on 0.2.152,** it cannot update itself, so install [0.2.153](https://github.com/freenet/freenet-core/releases/tag/v0.2.153) by hand. A node that rolled back to 0.2.151 will update to 0.2.153 on its own, because the rollback blocks only 0.2.152.
 
 **If you run a virtual machine on a host that has AVX2,** you can instead expose the host's CPU features to the VM. In Proxmox, set the VM's CPU type to `host`. Containers already see the host's CPU, so this does not apply to them.
 
-**New installs** now get 0.2.151, because we have marked it as the latest release on GitHub. Nodes that are running 0.2.152 on CPUs with AVX2 are unaffected and stay on 0.2.152.
+**New installs** now get 0.2.153. Between finding this bug and releasing the fix, we marked 0.2.151 as the latest release on GitHub to stop 0.2.152 spreading.
 
 ## What went wrong
 
@@ -78,10 +78,10 @@ Adding those two groups gives an upper estimate of about 70 peers, or 7% of the 
 
 We looked for changes that make this class of mistake fail automatically, without adding manual steps to a release.
 
-- **Fixing the build** ([#6061](https://github.com/freenet/freenet-core/pull/6061), in review). The build job now names Ubuntu 24.04 explicitly, sets the C compiler's target to baseline x86-64, and discards the old cache.
-- **Failing the build on a repeat.** The same change adds a check that disassembles a sample of C functions from `ring` and `zstd` in the finished binaries, and fails if they contain AVX or BMI instructions. It fails on the shipped 0.2.152 binaries and passes on 0.2.151. It samples specific functions, so it detects a wrong C compiler setting and would not detect every possible cause.
+- **Fixing the build** ([#6061](https://github.com/freenet/freenet-core/pull/6061), shipped in 0.2.153). The build job now names Ubuntu 24.04 explicitly, sets the C compiler's target to baseline x86-64, and discards the old cache. We also built with the same setting on the Ubuntu 26.04 image that caused this, and that binary ran correctly under emulation, so the setting works without the Ubuntu 24.04 pin.
+- **Failing the build on a repeat.** The same change adds a check that disassembles a sample of C functions from `ring` and `zstd` in the finished binaries, and fails if they contain instructions newer than baseline x86-64. It fails on the shipped 0.2.152 binaries and passes on 0.2.151. It samples specific functions, so it detects a wrong C compiler setting and would not detect every possible cause.
 
-We also plan the following. None of these has been done yet:
+We also plan the following, tracked in [#6062](https://github.com/freenet/freenet-core/issues/6062). None of these has been done yet:
 
 - Name exact versions for the other build machines, so that a change of image arrives as a visible code change.
 - Run our existing pre-release canary under an emulated older CPU, if its time limits allow for the slowdown. This would test real startup on a CPU without AVX2.
